@@ -1,0 +1,16 @@
+package com.dzhenakova.blog.platform.api.dto;
+
+import java.util.List;
+
+public record PostResponse(
+        Long id,
+        String title,
+        String text,
+        List<String> tags,
+        long likesCount,
+        long commentsCount
+) {
+    public PostResponse {
+        tags = tags == null ? List.of() : List.copyOf(tags);
+    }
+}
