@@ -9,9 +9,14 @@ import java.util.Optional;
 
 public interface CommentDao {
     List<Comment> findByPostId(long postId);
+
     Optional<Comment> findById(long id);
+
     Comment save(Comment comment);
+
     boolean update(Comment comment);
+
     boolean deleteById(long id);
+
     Map<Long, Long> countByPostIds(Collection<Long> postIds);
 }

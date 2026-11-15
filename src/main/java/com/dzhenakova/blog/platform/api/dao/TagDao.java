@@ -6,5 +6,6 @@ import java.util.Map;
 
 public interface TagDao {
     Map<Long, List<String>> findByPostIds(Collection<Long> postIds);
+
     void replaceTags(long postId, Collection<String> tags);
 }
