@@ -1,5 +1,6 @@
 # blog-platform-api
-RESTful backend service for a blog platform built with Java, Spring Framework (Web MVC, JDBC), H2, and Apache Tomcat
+RESTful backend service for a blog platform built with Java, Spring Framework (Web MVC, JDBC), H2, and Apache Tomcat.
+Packaged as a WAR and used by a ready-made React frontend.
 
 ## Features
 
@@ -95,3 +96,49 @@ erDiagram
 - Deleting a post deletes its tags and comments (`ON DELETE CASCADE`)
 - Images are stored on disk; the table keeps only the file name
 - `commentsCount` is not stored, it is calculated with `COUNT(*)`
+
+## Build and deployment
+
+The application is packaged as a WAR and runs on an external Apache Tomcat
+
+### Build
+
+Run from the project root:
+
+```bash
+mvn clean package
+```
+
+The resulting archive is `target/ROOT.war`.
+
+### Deploy (macOS / Homebrew)
+
+Stop Tomcat:
+
+```bash
+brew services stop tomcat
+```
+
+Replace the existing (previous) ROOT.war in Tomcat's webapps.
+
+Copy the new built archive:
+
+   ```bash
+   cp target/ROOT.war "$(brew --prefix tomcat)/libexec/webapps/ROOT.war"
+   ```
+
+Start Tomcat:
+
+   ```bash
+   brew services start tomcat
+   ```
+
+The backend runs at `http://localhost:8080`.
+The frontend is started separately.
+
+### Logs
+
+```bash
+tail -n 100 "$(brew --prefix tomcat)/libexec/logs/catalina.$(date +%F).log"
+tail -n 100 "$(brew --prefix tomcat)/libexec/logs/localhost.$(date +%F).log"
+```
