@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,8 +50,14 @@ public class FileSystemImageStorage implements ImageStorage {
     }
 
     @Override
-    public byte[] load(String imageName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public Optional<byte[]> load(String imageName) {
+        try {
+            return Optional.of(Files.readAllBytes(resolve(imageName)));
+        } catch (NoSuchFileException e) {
+            return Optional.empty();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read image " + imageName, e);
+        }
     }
 
     private static String extensionOf(String filename) {
@@ -59,5 +67,13 @@ public class FileSystemImageStorage implements ImageStorage {
         }
         ext = ext.toLowerCase(Locale.ROOT);
         return ALLOWED_EXTENSIONS.contains(ext) ? "." + ext : "";
+    }
+
+    private Path resolve(String imageName) {
+        Path path = rootDir.resolve(imageName).normalize();
+        if (!path.startsWith(rootDir)) {
+            throw new IllegalArgumentException("Invalid image name: " + imageName);
+        }
+        return path;
     }
 }

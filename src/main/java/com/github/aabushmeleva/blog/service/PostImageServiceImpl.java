@@ -1,8 +1,10 @@
-package com.github.aabushmeleva.blog.service.tag;
+package com.github.aabushmeleva.blog.service;
 
 import com.github.aabushmeleva.blog.dao.PostDao;
+import com.github.aabushmeleva.blog.dto.PostImageContent;
+import com.github.aabushmeleva.blog.exception.ImageNotFoundException;
+import com.github.aabushmeleva.blog.exception.NotFoundException;
 import com.github.aabushmeleva.blog.exception.PostNotFoundException;
-import com.github.aabushmeleva.blog.service.PostImageService;
 import com.github.aabushmeleva.blog.storage.ImageStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,8 +34,12 @@ public class PostImageServiceImpl implements PostImageService {
     }
 
     @Override
-    public byte[] getImage(long postId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public PostImageContent getImage(long postId) {
+        String imageName = postDao.findImageName(postId)
+                .orElseThrow(() -> imageOrPostNotFound(postId));
+        byte[] content = imageStorage.load(imageName)
+                .orElseThrow(() -> new ImageNotFoundException(postId));
+        return new PostImageContent(imageName, content);
     }
 
     private String saveFile(MultipartFile image) {
@@ -42,5 +48,11 @@ public class PostImageServiceImpl implements PostImageService {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read uploaded image", e);
         }
+    }
+
+    private NotFoundException imageOrPostNotFound(long postId) {
+        return postDao.existsById(postId)
+                ? new ImageNotFoundException(postId)
+                : new PostNotFoundException(postId);
     }
 }
