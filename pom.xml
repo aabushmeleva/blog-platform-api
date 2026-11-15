@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Library versions -->
-        <spring.version>6.1.14</spring.version>
+        <spring.version>6.2.19</spring.version>
         <spring-data-jdbc.version>3.3.5</spring-data-jdbc.version>
         <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
         <jackson.version>2.18.1</jackson.version>
@@ -31,6 +31,13 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <!-- Spring JDBC: JdbcTemplate, NamedParameterJdbcTemplate, transaction manager -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
             <version>${spring.version}</version>
         </dependency>
 
@@ -49,6 +56,14 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- H2 database driver -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Utility libraries: Lombok and SLF4J logging -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -62,7 +77,7 @@
             <version>${slf4j.version}</version>
         </dependency>
 
-        <!-- Testing dependencies: Spring Test, JUnit 5, Mockito -->
+        <!-- Testing dependencies: Spring Test, JUnit 5, Mockito, Jsonpath, Hamcrest -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
@@ -81,10 +96,53 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>2.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>3.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
+        <!-- ROOT.war is deployed by Tomcat to the root context: http://localhost:8080/ -->
+        <finalName>ROOT</finalName>
+
         <plugins>
+            <!-- Java compiler settings -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <!-- Keep method parameter names in bytecode,
+                    so @PathVariable/@RequestParam work without explicit names -->
+                    <parameters>true</parameters>
+                    <!-- Explicit Lombok annotation processor: required on JDK 23+,
+                    removes implicit processing note on JDK 21 -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!-- WAR packaging for deployment to external Tomcat -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+
             <!-- Plugin for running JUnit 5 tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
