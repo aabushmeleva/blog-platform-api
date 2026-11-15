@@ -78,8 +78,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public long incrementLikes(long id) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return postDao.incrementLikes(id).orElseThrow(() -> postNotFound(id));
     }
 
     private List<String> findTags(long postId) {

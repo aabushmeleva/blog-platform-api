@@ -38,6 +38,18 @@ public class JdbcPostDao implements PostDao {
             WHERE id = :id
             """;
 
+    private static final String INCREMENT_LIKES_SQL = """
+            UPDATE post
+            SET likes_count = likes_count + 1
+            WHERE id = :id
+            """;
+
+    private static final String FIND_LIKES_COUNT_SQL = """
+            SELECT likes_count
+            FROM post
+            WHERE id = :id
+            """;
+
     private static final String[] ID_COLUMN = {"id"};
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -98,7 +110,11 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public OptionalLong incrementLikes(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+        Map<String, Object> params = Map.of("id", id);
+        if (jdbcTemplate.update(INCREMENT_LIKES_SQL, params) == 0) {
+            return OptionalLong.empty();
+        }
+        return OptionalLong.of(jdbcTemplate.queryForObject(FIND_LIKES_COUNT_SQL, params, Long.class));
     }
 
     @Override

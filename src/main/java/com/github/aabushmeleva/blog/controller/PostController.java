@@ -45,4 +45,9 @@ public class PostController {
     public PostResponse update(@PathVariable long id, @RequestBody PostUpdateRequest request) {
         return postService.update(id, request);
     }
+
+    @PostMapping("/{id}/likes")
+    public long incrementLikes(@PathVariable long id) {
+        return postService.incrementLikes(id);
+    }
 }
