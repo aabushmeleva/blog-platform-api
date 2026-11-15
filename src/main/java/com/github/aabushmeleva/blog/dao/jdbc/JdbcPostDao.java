@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -54,6 +55,19 @@ public class JdbcPostDao implements PostDao {
             FROM post
             WHERE id = :id
             """;
+
+    private static final String FIND_IMAGE_NAME_SQL = """
+            SELECT image_name
+            FROM post
+            WHERE id = :id
+            """;
+
+    private static final String UPDATE_IMAGE_NAME_SQL = """
+            UPDATE post
+            SET image_name = :imageName
+            WHERE id = :id
+            """;
+
 
     private static final String[] ID_COLUMN = {"id"};
 
@@ -130,11 +144,17 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public boolean updateImageName(long id, String imageName) {
-        throw new UnsupportedOperationException("Not implemented");
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("imageName", imageName);
+        return jdbcTemplate.update(UPDATE_IMAGE_NAME_SQL, params) > 0;
     }
 
     @Override
     public Optional<String> findImageName(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+        return jdbcTemplate.queryForList(FIND_IMAGE_NAME_SQL, Map.of("id", id), String.class)
+                .stream()
+                .filter(Objects::nonNull)
+                .findFirst();
     }
 }

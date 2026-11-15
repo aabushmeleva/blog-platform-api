@@ -20,6 +20,12 @@
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
+
+        <multipart-config>
+            <max-file-size>5242880</max-file-size>          <!-- 5 MB на один файл -->
+            <max-request-size>10485760</max-request-size>   <!-- 10 MB на весь запрос -->
+            <file-size-threshold>0</file-size-threshold>    <!-- записать сразу во временный файл -->
+        </multipart-config>
     </servlet>
     <!-- DispatcherServlet handles all requests -->
     <servlet-mapping>
