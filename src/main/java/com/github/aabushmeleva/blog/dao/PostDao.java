@@ -8,13 +8,13 @@ import java.util.Optional;
 import java.util.OptionalLong;
 
 public interface PostDao {
-    List<Post> findAll(PostSearchQuery query, int limit, long offset);
-
-    long count(PostSearchQuery query);
+    Post save(Post post);
 
     Optional<Post> findById(long id);
 
-    Post save(Post post);
+    List<Post> findAll(PostSearchQuery query, int limit, long offset);
+
+    long count(PostSearchQuery query);
 
     boolean update(Post post);
 
