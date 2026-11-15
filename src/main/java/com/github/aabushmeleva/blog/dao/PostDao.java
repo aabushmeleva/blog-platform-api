@@ -12,6 +12,8 @@ public interface PostDao {
 
     Optional<Post> findById(long id);
 
+    boolean existsById(long id);
+
     List<Post> findAll(PostSearchQuery query, int limit, long offset);
 
     long count(PostSearchQuery query);

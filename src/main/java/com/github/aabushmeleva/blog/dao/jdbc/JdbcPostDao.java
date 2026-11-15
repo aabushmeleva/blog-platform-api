@@ -19,15 +19,20 @@ import java.util.OptionalLong;
 @Repository
 public class JdbcPostDao implements PostDao {
 
-    private static final String INSERT = """
+    private static final String INSERT_SQL = """
             INSERT INTO post (title, text, likes_count, image_name)
             VALUES (:title, :text, :likesCount, :imageName)
             """;
 
-    private static final String SELECT_BY_ID = """
+
+    private static final String SELECT_BY_ID_SQL = """
             SELECT id, title, text, likes_count, image_name
             FROM post
             WHERE id = :id
+            """;
+
+    private static final String EXISTS_BY_ID_SQL = """
+            SELECT EXISTS (SELECT 1 FROM post WHERE id = :id)
             """;
 
     private static final String DELETE_BY_ID_SQL = "DELETE FROM post WHERE id = :id";
@@ -67,7 +72,7 @@ public class JdbcPostDao implements PostDao {
                 .addValue("imageName", post.imageName());
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(INSERT, params, keyHolder, ID_COLUMN);
+        jdbcTemplate.update(INSERT_SQL, params, keyHolder, ID_COLUMN);
 
         Long id = keyHolder.getKeyAs(Long.class);
         if (id == null) {
@@ -78,9 +83,15 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public Optional<Post> findById(long id) {
-        return jdbcTemplate.query(SELECT_BY_ID, new MapSqlParameterSource("id", id), PostRowMapper.INSTANCE)
+        return jdbcTemplate.query(SELECT_BY_ID_SQL, new MapSqlParameterSource("id", id), PostRowMapper.INSTANCE)
                 .stream()
                 .findFirst();
+    }
+
+    @Override
+    public boolean existsById(long id) {
+        return Boolean.TRUE.equals(
+                jdbcTemplate.queryForObject(EXISTS_BY_ID_SQL, Map.of("id", id), Boolean.class));
     }
 
     @Override
