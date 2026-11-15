@@ -160,6 +160,7 @@ or run `ALTER USER blog_app_user SET PASSWORD '...'`.
 - Java 21
 - Maven 3.9+
 - Apache Tomcat 10.1+ (Jakarta Servlet 6.0)
+- Docker Desktop (to run the frontend); on macOS enable host networking, see [Frontend](#frontend)
 
 ## Build and deployment
 
@@ -204,12 +205,61 @@ Start Tomcat:
 brew services start tomcat
 ```
 
-The backend runs at `http://localhost:8080`.
-The frontend is started separately.
+### Frontend
+
+The React frontend is provided as a separate archive with the assignment
+(`dist`, `nginx.conf`, `Dockerfile`, `docker-compose.yaml`). It is served by Nginx on port 80
+and calls the backend at `http://localhost:8080` directly from the browser
+(CORS is enabled for `http://localhost`).
+
+1. Start Docker Desktop.
+2. On macOS, enable host networking once: Docker Desktop → Settings → Resources → Network →
+   **Enable host networking** → Apply & restart. The frontend's `docker-compose.yaml` uses
+   `network_mode: host`, which is not available on macOS by default.
+3. Unpack the archive and start the container:
+
+```bash
+cd front-app
+docker compose up -d
+docker ps
+```
+
+4. Open `http://localhost`.
+
+Stop the frontend:
+
+```bash
+docker compose down
+```
 
 ### Logs
 
 ```bash
 tail -n 100 "$(brew --prefix tomcat)/libexec/logs/catalina.$(date +%F).log"
 tail -n 100 "$(brew --prefix tomcat)/libexec/logs/localhost.$(date +%F).log"
+```
+
+## Usage
+
+Use the frontend at `http://localhost`, or call the API directly:
+
+```bash
+# create a post
+curl -X POST localhost:8080/api/posts -H 'Content-Type: application/json' \
+  -d '{"title":"Hello","text":"First post","tags":["java","spring"]}'
+
+# upload an image
+curl -X PUT localhost:8080/api/posts/1/image -F 'image=@cat.png'
+
+# feed: page 1, 5 posts per page, search by title and tag
+# (# must be URL-encoded, so --data-urlencode is used)
+curl --get localhost:8080/api/posts --data-urlencode 'search=hello #java' \
+  -d pageNumber=1 -d pageSize=5
+
+# like a post
+curl -X POST localhost:8080/api/posts/1/likes
+
+# add a comment
+curl -X POST localhost:8080/api/posts/1/comments -H 'Content-Type: application/json' \
+  -d '{"text":"Nice post","postId":1}'
 ```
