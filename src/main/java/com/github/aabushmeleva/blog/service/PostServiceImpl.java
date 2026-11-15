@@ -1,5 +1,6 @@
 package com.github.aabushmeleva.blog.service;
 
+import com.github.aabushmeleva.blog.dao.CommentDao;
 import com.github.aabushmeleva.blog.dao.PostDao;
 import com.github.aabushmeleva.blog.dao.TagDao;
 import com.github.aabushmeleva.blog.dto.PostCreateRequest;
@@ -23,11 +24,13 @@ public class PostServiceImpl implements PostService {
     private final PostDao postDao;
     private final PostMapper postMapper;
     private final TagDao tagDao;
+    private final CommentDao commentDao;
 
-    public PostServiceImpl(PostDao postDao, PostMapper postMapper, TagDao tagDao) {
+    public PostServiceImpl(PostDao postDao, PostMapper postMapper, TagDao tagDao, CommentDao commentDao) {
         this.postDao = postDao;
         this.postMapper = postMapper;
         this.tagDao = tagDao;
+        this.commentDao = commentDao;
     }
 
     @Override
@@ -44,8 +47,7 @@ public class PostServiceImpl implements PostService {
     public PostResponse findById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
-        // TODO: load comments count
-        return postMapper.toResponse(post, findTags(id), 0);
+        return postMapper.toResponse(post, findTags(id), countComments(id));
     }
 
     @Override
@@ -59,14 +61,12 @@ public class PostServiceImpl implements PostService {
         Post updated = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id))
                 .withContent(request.title(), request.text());
-
         if (!postDao.update(updated)) {
             throw new PostNotFoundException(id);
         }
-        // TODO: return comments count
         List<String> tags = TagNormalizer.normalize(request.tags());
         tagDao.replaceTags(id, tags);
-        return postMapper.toResponse(updated, tags, 0);
+        return postMapper.toResponse(updated, tags, countComments(id));
     }
 
     @Override
@@ -86,5 +86,9 @@ public class PostServiceImpl implements PostService {
 
     private List<String> findTags(long postId) {
         return tagDao.findByPostIds(List.of(postId)).getOrDefault(postId, List.of());
+    }
+
+    private long countComments(long postId) {
+        return commentDao.countByPostIds(List.of(postId)).getOrDefault(postId, 0L);
     }
 }

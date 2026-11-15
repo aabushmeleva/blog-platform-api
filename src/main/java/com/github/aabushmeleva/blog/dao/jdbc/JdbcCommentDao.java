@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +48,13 @@ public class JdbcCommentDao implements CommentDao {
     private static final String DELETE_BY_ID_AND_POST_ID_SQL = """
             DELETE FROM comment
             WHERE id = :id AND post_id = :postId
+            """;
+
+    private static final String COUNT_BY_POST_IDS_SQL = """
+            SELECT post_id, COUNT(*) AS comments_count
+            FROM comment
+            WHERE post_id IN (:postIds)
+            GROUP BY post_id
             """;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -92,6 +100,13 @@ public class JdbcCommentDao implements CommentDao {
 
     @Override
     public Map<Long, Long> countByPostIds(Collection<Long> postIds) {
-        throw new UnsupportedOperationException("Not implemented");
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Long> counts = new HashMap<>();
+        jdbcTemplate.query(COUNT_BY_POST_IDS_SQL, Map.of("postIds", postIds), rs -> {
+            counts.put(rs.getLong("post_id"), rs.getLong("comments_count"));
+        });
+        return counts;
     }
 }
