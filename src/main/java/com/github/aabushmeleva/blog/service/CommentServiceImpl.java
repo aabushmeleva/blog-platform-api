@@ -23,8 +23,12 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentResponse> findByPostId(long postId) {
-        throw new UnsupportedOperationException("Not implemented");
+        requirePostExists(postId);
+        return commentDao.findByPostId(postId).stream()
+                .map(commentMapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -35,9 +39,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponse create(long postId, CommentCreateRequest request) {
-        if (!postDao.existsById(postId)) {
-            throw new NotFoundException("Post not found: " + postId);
-        }
+        requirePostExists(postId);
         Comment saved = commentDao.save(commentMapper.toNewComment(postId, request));
         return commentMapper.toResponse(saved);
     }
@@ -50,5 +52,11 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void delete(long commentId) {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private void requirePostExists(long postId) {
+        if (!postDao.existsById(postId)) {
+            throw new NotFoundException("Post not found: " + postId);
+        }
     }
 }

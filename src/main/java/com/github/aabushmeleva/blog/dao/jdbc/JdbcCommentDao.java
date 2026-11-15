@@ -1,6 +1,7 @@
 package com.github.aabushmeleva.blog.dao.jdbc;
 
 import com.github.aabushmeleva.blog.dao.CommentDao;
+import com.github.aabushmeleva.blog.dao.rowmapper.CommentRowMapper;
 import com.github.aabushmeleva.blog.model.Comment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -24,11 +25,18 @@ public class JdbcCommentDao implements CommentDao {
             VALUES (:postId, :text)
             """;
 
+    private static final String FIND_BY_POST_ID_SQL = """
+            SELECT id, post_id, text
+            FROM comment
+            WHERE post_id = :postId
+            ORDER BY id
+            """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
     public List<Comment> findByPostId(long postId) {
-        throw new UnsupportedOperationException("Not implemented");
+        return jdbcTemplate.query(FIND_BY_POST_ID_SQL, Map.of("postId", postId), CommentRowMapper.INSTANCE);
     }
 
     @Override
