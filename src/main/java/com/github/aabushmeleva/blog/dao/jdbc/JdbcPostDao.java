@@ -12,6 +12,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -28,6 +29,8 @@ public class JdbcPostDao implements PostDao {
             FROM post
             WHERE id = :id
             """;
+
+    private static final String DELETE_BY_ID_SQL = "DELETE FROM post WHERE id = :id";
 
     private static final String[] ID_COLUMN = {"id"};
 
@@ -79,7 +82,8 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public boolean deleteById(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+        int deletedRows = jdbcTemplate.update(DELETE_BY_ID_SQL, Map.of("id", id));
+        return deletedRows > 0;
     }
 
     @Override

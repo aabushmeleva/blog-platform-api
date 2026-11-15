@@ -37,7 +37,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public PostResponse findById(long id) {
         Post post = postDao.findById(id)
-                .orElseThrow(() -> new NotFoundException("Post not found: id=" + id));
+                .orElseThrow(() -> postNotFound(id));
         // TODO: load tags and comments count
         return postMapper.toResponse(post, List.of(), 0);
     }
@@ -53,12 +53,19 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public void delete(long id) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (!postDao.deleteById(id)) {
+            throw postNotFound(id);
+        }
     }
 
     @Override
     public long incrementLikes(long id) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    private static NotFoundException postNotFound(long id) {
+        return new NotFoundException("Post with id " + id + " not found");
     }
 }
