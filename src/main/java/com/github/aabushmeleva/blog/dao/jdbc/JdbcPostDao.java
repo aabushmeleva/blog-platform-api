@@ -1,6 +1,7 @@
 package com.github.aabushmeleva.blog.dao.jdbc;
 
 import com.github.aabushmeleva.blog.dao.PostDao;
+import com.github.aabushmeleva.blog.dao.rowmapper.PostRowMapper;
 import com.github.aabushmeleva.blog.model.Post;
 import com.github.aabushmeleva.blog.model.PostSearchQuery;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -20,6 +21,12 @@ public class JdbcPostDao implements PostDao {
     private static final String INSERT = """
             INSERT INTO post (title, text, likes_count, image_name)
             VALUES (:title, :text, :likesCount, :imageName)
+            """;
+
+    private static final String SELECT_BY_ID = """
+            SELECT id, title, text, likes_count, image_name
+            FROM post
+            WHERE id = :id
             """;
 
     private static final String[] ID_COLUMN = {"id"};
@@ -50,7 +57,9 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public Optional<Post> findById(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+        return jdbcTemplate.query(SELECT_BY_ID, new MapSqlParameterSource("id", id), PostRowMapper.INSTANCE)
+                .stream()
+                .findFirst();
     }
 
     @Override

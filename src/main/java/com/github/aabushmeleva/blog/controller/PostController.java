@@ -4,6 +4,8 @@ import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.service.PostService;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,5 +26,10 @@ public class PostController {
     @ResponseStatus(HttpStatus.CREATED)
     public PostResponse create(@RequestBody PostCreateRequest request) {
         return postService.create(request);
+    }
+
+    @GetMapping("/{id}")
+    public PostResponse findById(@PathVariable long id) {
+        return postService.findById(id);
     }
 }

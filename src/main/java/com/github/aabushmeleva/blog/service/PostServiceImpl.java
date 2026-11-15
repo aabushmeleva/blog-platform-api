@@ -5,9 +5,11 @@ import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
+import com.github.aabushmeleva.blog.exception.NotFoundException;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,8 +34,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PostResponse findById(long id) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Post post = postDao.findById(id)
+                .orElseThrow(() -> new NotFoundException("Post not found: id=" + id));
+        // TODO: load tags and comments count
+        return postMapper.toResponse(post, List.of(), 0);
     }
 
     @Override
