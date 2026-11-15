@@ -119,7 +119,12 @@ Stop Tomcat:
 brew services stop tomcat
 ```
 
-Replace the existing (previous) ROOT.war in Tomcat's webapps.
+Remove the previous WAR and its unpacked directory in Tomcat's webapps:
+
+```bash
+rm -f "$(brew --prefix tomcat)/libexec/webapps/ROOT.war"
+rm -rf "$(brew --prefix tomcat)/libexec/webapps/ROOT"
+```
 
 Copy the new built archive:
 
