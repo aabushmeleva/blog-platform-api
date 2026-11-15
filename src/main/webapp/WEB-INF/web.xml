@@ -14,7 +14,10 @@
         </init-param>
         <init-param>
             <param-name>contextConfigLocation</param-name>
-            <param-value>com.github.aabushmeleva.blog.config.WebConfiguration</param-value>
+            <param-value>
+                com.github.aabushmeleva.blog.config.WebConfiguration
+                com.github.aabushmeleva.blog.config.DataSourceConfiguration
+            </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
