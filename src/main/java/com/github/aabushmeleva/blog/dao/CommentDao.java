@@ -1,6 +1,6 @@
-package com.dzhenakova.blog.platform.api.dao;
+package com.github.aabushmeleva.blog.dao;
 
-import com.dzhenakova.blog.platform.api.model.Comment;
+import com.github.aabushmeleva.blog.model.Comment;
 
 import java.util.Collection;
 import java.util.List;

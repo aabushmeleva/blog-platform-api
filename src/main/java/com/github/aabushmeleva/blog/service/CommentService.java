@@ -1,8 +1,8 @@
-package com.dzhenakova.blog.platform.api.service;
+package com.github.aabushmeleva.blog.service;
 
-import com.dzhenakova.blog.platform.api.dto.CommentCreateRequest;
-import com.dzhenakova.blog.platform.api.dto.CommentResponse;
-import com.dzhenakova.blog.platform.api.dto.CommentUpdateRequest;
+import com.github.aabushmeleva.blog.dto.CommentCreateRequest;
+import com.github.aabushmeleva.blog.dto.CommentResponse;
+import com.github.aabushmeleva.blog.dto.CommentUpdateRequest;
 
 import java.util.List;
 

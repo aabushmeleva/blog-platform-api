@@ -1,4 +1,4 @@
-package com.dzhenakova.blog.platform.api.dao;
+package com.github.aabushmeleva.blog.dao;
 
 import java.util.Collection;
 import java.util.List;

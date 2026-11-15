@@ -1,4 +1,4 @@
-package com.dzhenakova.blog.platform.api.dto;
+package com.github.aabushmeleva.blog.dto;
 
 public record CommentResponse(
         Long id,

@@ -1,9 +1,9 @@
-package com.dzhenakova.blog.platform.api.service;
+package com.github.aabushmeleva.blog.service;
 
-import com.dzhenakova.blog.platform.api.dto.PostCreateRequest;
-import com.dzhenakova.blog.platform.api.dto.PostPageResponse;
-import com.dzhenakova.blog.platform.api.dto.PostResponse;
-import com.dzhenakova.blog.platform.api.dto.PostUpdateRequest;
+import com.github.aabushmeleva.blog.dto.PostCreateRequest;
+import com.github.aabushmeleva.blog.dto.PostPageResponse;
+import com.github.aabushmeleva.blog.dto.PostResponse;
+import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 
 public interface PostService {
 

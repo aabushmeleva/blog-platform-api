@@ -1,4 +1,4 @@
-package com.dzhenakova.blog.platform.api.storage;
+package com.github.aabushmeleva.blog.storage;
 
 import java.io.InputStream;
 

@@ -1,4 +1,4 @@
-package com.dzhenakova.blog.platform.api.service;
+package com.github.aabushmeleva.blog.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

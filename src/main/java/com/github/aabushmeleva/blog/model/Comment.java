@@ -1,4 +1,4 @@
-package com.dzhenakova.blog.platform.api.model;
+package com.github.aabushmeleva.blog.model;
 
 public record Comment(
         Long id,
