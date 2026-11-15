@@ -48,8 +48,17 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse update(long id, PostUpdateRequest request) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Post updated = postDao.findById(id)
+                .orElseThrow(() -> postNotFound(id))
+                .withContent(request.title(), request.text());
+
+        if (!postDao.update(updated)) {
+            throw postNotFound(id);
+        }
+        // TODO: return tags and comments count
+        return postMapper.toResponse(updated, List.of(), 0);
     }
 
     @Override

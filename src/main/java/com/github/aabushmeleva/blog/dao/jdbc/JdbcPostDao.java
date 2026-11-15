@@ -32,6 +32,12 @@ public class JdbcPostDao implements PostDao {
 
     private static final String DELETE_BY_ID_SQL = "DELETE FROM post WHERE id = :id";
 
+    static final String UPDATE_SQL = """
+            UPDATE post
+            SET title = :title, text = :text
+            WHERE id = :id
+            """;
+
     private static final String[] ID_COLUMN = {"id"};
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -77,7 +83,11 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public boolean update(Post post) {
-        throw new UnsupportedOperationException("Not implemented");
+        var params = new MapSqlParameterSource()
+                .addValue("id", post.id())
+                .addValue("title", post.title())
+                .addValue("text", post.text());
+        return jdbcTemplate.update(UPDATE_SQL, params) > 0;
     }
 
     @Override

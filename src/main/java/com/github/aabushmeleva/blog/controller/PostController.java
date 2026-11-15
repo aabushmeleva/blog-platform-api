@@ -2,12 +2,14 @@ package com.github.aabushmeleva.blog.controller;
 
 import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostResponse;
+import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -37,5 +39,10 @@ public class PostController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable long id) {
         postService.delete(id);
+    }
+
+    @PutMapping("/{id}")
+    public PostResponse update(@PathVariable long id, @RequestBody PostUpdateRequest request) {
+        return postService.update(id, request);
     }
 }
