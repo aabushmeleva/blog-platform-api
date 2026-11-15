@@ -68,6 +68,17 @@ public class JdbcPostDao implements PostDao {
             WHERE id = :id
             """;
 
+    private static final String FIND_ALL_SQL = """
+            SELECT id, title, text, likes_count, image_name
+            FROM post
+            ORDER BY id DESC
+            LIMIT :limit OFFSET :offset
+            """;
+
+    private static final String COUNT_SQL = """
+            SELECT COUNT(*)
+            FROM post
+            """;
 
     private static final String[] ID_COLUMN = {"id"};
 
@@ -110,12 +121,16 @@ public class JdbcPostDao implements PostDao {
 
     @Override
     public List<Post> findAll(PostSearchQuery query, int limit, long offset) {
-        throw new UnsupportedOperationException("Not implemented");
+        var params = new MapSqlParameterSource()
+                .addValue("limit", limit)
+                .addValue("offset", offset);
+        return jdbcTemplate.query(FIND_ALL_SQL, params, PostRowMapper.INSTANCE);
     }
 
     @Override
     public long count(PostSearchQuery query) {
-        throw new UnsupportedOperationException("Not implemented");
+        Long count = jdbcTemplate.queryForObject(COUNT_SQL, Map.of(), Long.class);
+        return count == null ? 0 : count;
     }
 
     @Override

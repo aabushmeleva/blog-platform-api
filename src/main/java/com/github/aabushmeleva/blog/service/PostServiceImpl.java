@@ -8,6 +8,7 @@ import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.exception.PostNotFoundException;
+import com.github.aabushmeleva.blog.model.PostSearchQuery;
 import com.github.aabushmeleva.blog.service.event.PostDeletedEvent;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -55,8 +58,24 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PostPageResponse findPage(String search, int pageNumber, int pageSize) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        PostSearchQuery query = new PostSearchQuery("", Set.of());
+        long total = postDao.count(query);
+        int lastPage = (int) Math.max(1, (total + pageSize - 1) / pageSize);
+        long offset = (long) (pageNumber - 1) * pageSize;
+
+        List<Post> posts = postDao.findAll(query, pageSize, offset);
+        List<Long> ids = posts.stream().map(Post::id).toList();
+        Map<Long, List<String>> tags = tagDao.findByPostIds(ids);
+        Map<Long, Long> commentCounts = commentDao.countByPostIds(ids);
+
+        List<PostResponse> items = posts.stream()
+                .map(post -> postMapper.toFeedResponse(post,
+                        tags.getOrDefault(post.id(), List.of()),
+                        commentCounts.getOrDefault(post.id(), 0L)))
+                .toList();
+        return new PostPageResponse(items, pageNumber > 1, pageNumber < lastPage, lastPage);
     }
 
     @Override

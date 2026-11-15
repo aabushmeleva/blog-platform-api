@@ -1,6 +1,7 @@
 package com.github.aabushmeleva.blog.controller;
 
 import com.github.aabushmeleva.blog.dto.PostCreateRequest;
+import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.service.PostService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,5 +51,12 @@ public class PostController {
     @PostMapping("/{id}/likes")
     public long incrementLikes(@PathVariable long id) {
         return postService.incrementLikes(id);
+    }
+
+    @GetMapping
+    public PostPageResponse findPage(@RequestParam String search,
+                                     @RequestParam int pageNumber,
+                                     @RequestParam int pageSize) {
+        return postService.findPage(search, pageNumber, pageSize);
     }
 }
