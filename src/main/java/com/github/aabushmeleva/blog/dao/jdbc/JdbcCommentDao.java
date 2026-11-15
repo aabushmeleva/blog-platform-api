@@ -38,6 +38,12 @@ public class JdbcCommentDao implements CommentDao {
             WHERE id = :id
             """;
 
+    private static final String UPDATE_SQL = """
+        UPDATE comment
+        SET text = :text
+        WHERE id = :id
+        """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
@@ -65,7 +71,10 @@ public class JdbcCommentDao implements CommentDao {
 
     @Override
     public boolean update(Comment comment) {
-        throw new UnsupportedOperationException("Not implemented");
+        var params = new MapSqlParameterSource()
+                .addValue("id", comment.id())
+                .addValue("text", comment.text());
+        return jdbcTemplate.update(UPDATE_SQL, params) > 0;
     }
 
     @Override

@@ -2,12 +2,14 @@ package com.github.aabushmeleva.blog.controller;
 
 import com.github.aabushmeleva.blog.dto.CommentCreateRequest;
 import com.github.aabushmeleva.blog.dto.CommentResponse;
+import com.github.aabushmeleva.blog.dto.CommentUpdateRequest;
 import com.github.aabushmeleva.blog.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -37,5 +39,11 @@ public class CommentController {
     @GetMapping("/{commentId}")
     public CommentResponse findById(@PathVariable long postId, @PathVariable long commentId) {
         return commentService.findById(postId, commentId);
+    }
+
+    @PutMapping("/{commentId}")
+    public CommentResponse update(@PathVariable long commentId,
+                                  @RequestBody CommentUpdateRequest request) {
+        return commentService.update(commentId, request);
     }
 }

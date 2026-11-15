@@ -5,4 +5,7 @@ public record Comment(
         Long postId,
         String text
 ) {
+    public Comment withText(String text) {
+        return new Comment(id, postId, text);
+    }
 }

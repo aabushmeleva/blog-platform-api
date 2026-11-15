@@ -49,8 +49,15 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse update(long commentId, CommentUpdateRequest request) {
-        throw new UnsupportedOperationException("Not implemented");
+        Comment existing = commentDao.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
+        Comment updated = existing.withText(request.text());
+        if (!commentDao.update(updated)) {
+            throw new CommentNotFoundException(commentId);
+        }
+        return commentMapper.toResponse(updated);
     }
 
     @Override
