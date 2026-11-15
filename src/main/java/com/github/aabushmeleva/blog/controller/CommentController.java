@@ -33,4 +33,9 @@ public class CommentController {
     public List<CommentResponse> findByPostId(@PathVariable long postId) {
         return commentService.findByPostId(postId);
     }
+
+    @GetMapping("/{commentId}")
+    public CommentResponse findById(@PathVariable long postId, @PathVariable long commentId) {
+        return commentService.findById(postId, commentId);
+    }
 }

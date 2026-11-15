@@ -32,8 +32,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentResponse findById(long commentId) {
-        throw new UnsupportedOperationException("Not implemented");
+    @Transactional(readOnly = true)
+    public CommentResponse findById(long postId, long commentId) {
+        return commentDao.findById(commentId)
+                .filter(comment -> comment.postId() == postId)
+                .map(commentMapper::toResponse)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
     }
 
     @Override

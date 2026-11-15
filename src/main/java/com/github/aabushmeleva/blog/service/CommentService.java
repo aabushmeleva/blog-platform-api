@@ -10,7 +10,7 @@ public interface CommentService {
 
     List<CommentResponse> findByPostId(long postId);
 
-    CommentResponse findById(long commentId);
+    CommentResponse findById(long postId, long commentId);
 
     CommentResponse create(long postId, CommentCreateRequest request);
 

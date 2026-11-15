@@ -32,6 +32,12 @@ public class JdbcCommentDao implements CommentDao {
             ORDER BY id
             """;
 
+    private static final String FIND_BY_ID_SQL = """
+            SELECT id, post_id, text
+            FROM comment
+            WHERE id = :id
+            """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
@@ -41,7 +47,9 @@ public class JdbcCommentDao implements CommentDao {
 
     @Override
     public Optional<Comment> findById(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+        return jdbcTemplate.query(FIND_BY_ID_SQL, Map.of("id", id), CommentRowMapper.INSTANCE)
+                .stream()
+                .findFirst();
     }
 
     @Override
