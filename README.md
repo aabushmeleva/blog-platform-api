@@ -43,15 +43,15 @@ Base URL: `http://localhost:8080`
 
 ### Search rules
 
-- The search string is split into words by whitespace; empty words are ignored.
-- Words starting with `#` are tags; a post must contain all of them.
-- Other words are joined with a space and matched as a substring of the title.
-- Title and tag conditions are combined with AND.
-- In the feed, post text longer than 128 characters is truncated and ends with `…`.
+- The search string is split into words by whitespace; empty words are ignored
+- Words starting with `#` are tags; a post must contain all of them
+- Other words are joined with a space and matched as a substring of the title
+- Title and tag conditions are combined with AND
+- In the feed, post text longer than 128 characters is truncated and ends with `…`
 
 ## Architecture
 
-Layered architecture: `Controller → Service → DAO → Database`.
+Layered architecture: `Controller → Service → DAO → Database`
 
 | Package     | Responsibility |
 |-------------|---|
@@ -62,3 +62,36 @@ Layered architecture: `Controller → Service → DAO → Database`.
 | `model`     | Domain entities |
 | `dto`       | API request and response objects |
 | `config`    | Spring and servlet container configuration |
+
+## Database
+
+H2 database. The schema is created on startup from
+[`schema.sql`](src/main/resources/schema.sql)
+
+```mermaid
+erDiagram
+    post ||--o{ post_tag : has
+    post ||--o{ comment : has
+
+    post {
+        BIGINT id PK
+        VARCHAR title
+        CLOB text
+        BIGINT likes_count
+        VARCHAR image_name
+    }
+    post_tag {
+        BIGINT post_id PK, FK
+        VARCHAR name PK
+    }
+    comment {
+        BIGINT id PK
+        BIGINT post_id FK
+        CLOB text
+    }
+```
+
+- Tags are stored in a separate table, one row per tag (without `#`)
+- Deleting a post deletes its tags and comments (`ON DELETE CASCADE`)
+- Images are stored on disk; the table keeps only the file name
+- `commentsCount` is not stored, it is calculated with `COUNT(*)`
