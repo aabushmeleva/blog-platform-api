@@ -6,6 +6,7 @@ import com.github.aabushmeleva.blog.dto.CommentUpdateRequest;
 import com.github.aabushmeleva.blog.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,5 +46,10 @@ public class CommentController {
     public CommentResponse update(@PathVariable long commentId,
                                   @RequestBody CommentUpdateRequest request) {
         return commentService.update(commentId, request);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public void delete(@PathVariable long postId, @PathVariable long commentId) {
+        commentService.delete(postId, commentId);
     }
 }

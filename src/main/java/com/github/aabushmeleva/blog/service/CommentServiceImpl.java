@@ -61,8 +61,11 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void delete(long commentId) {
-        throw new UnsupportedOperationException("Not implemented");
+    @Transactional
+    public void delete(long postId, long commentId) {
+        if (!commentDao.deleteByIdAndPostId(commentId, postId)) {
+            throw new CommentNotFoundException(commentId);
+        }
     }
 
     private void requirePostExists(long postId) {

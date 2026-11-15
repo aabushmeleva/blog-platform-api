@@ -16,5 +16,5 @@ public interface CommentService {
 
     CommentResponse update(long commentId, CommentUpdateRequest request);
 
-    void delete(long commentId);
+    void delete(long postId, long commentId);
 }

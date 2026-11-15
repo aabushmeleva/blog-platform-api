@@ -16,7 +16,7 @@ public interface CommentDao {
 
     boolean update(Comment comment);
 
-    boolean deleteById(long id);
+    boolean deleteByIdAndPostId(long id, long postId);
 
     Map<Long, Long> countByPostIds(Collection<Long> postIds);
 }

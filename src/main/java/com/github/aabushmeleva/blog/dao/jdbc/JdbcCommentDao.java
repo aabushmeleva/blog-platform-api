@@ -39,10 +39,15 @@ public class JdbcCommentDao implements CommentDao {
             """;
 
     private static final String UPDATE_SQL = """
-        UPDATE comment
-        SET text = :text
-        WHERE id = :id
-        """;
+            UPDATE comment
+            SET text = :text
+                WHERE id = :id
+            """;
+
+    private static final String DELETE_BY_ID_AND_POST_ID_SQL = """
+            DELETE FROM comment
+            WHERE id = :id AND post_id = :postId
+            """;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -78,8 +83,11 @@ public class JdbcCommentDao implements CommentDao {
     }
 
     @Override
-    public boolean deleteById(long id) {
-        throw new UnsupportedOperationException("Not implemented");
+    public boolean deleteByIdAndPostId(long id, long postId) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("postId", postId);
+        return jdbcTemplate.update(DELETE_BY_ID_AND_POST_ID_SQL, params) > 0;
     }
 
     @Override
