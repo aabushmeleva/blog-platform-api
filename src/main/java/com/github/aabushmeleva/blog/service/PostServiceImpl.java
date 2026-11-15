@@ -8,9 +8,11 @@ import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.exception.PostNotFoundException;
+import com.github.aabushmeleva.blog.service.event.PostDeletedEvent;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
 import com.github.aabushmeleva.blog.service.tag.TagNormalizer;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +27,14 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final TagDao tagDao;
     private final CommentDao commentDao;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public PostServiceImpl(PostDao postDao, PostMapper postMapper, TagDao tagDao, CommentDao commentDao) {
+    public PostServiceImpl(PostDao postDao, PostMapper postMapper, TagDao tagDao, CommentDao commentDao, ApplicationEventPublisher eventPublisher) {
         this.postDao = postDao;
         this.postMapper = postMapper;
         this.tagDao = tagDao;
         this.commentDao = commentDao;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -72,9 +76,11 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void delete(long id) {
+        String imageName = postDao.findImageName(id).orElse(null);
         if (!postDao.deleteById(id)) {
             throw new PostNotFoundException(id);
         }
+        eventPublisher.publishEvent(new PostDeletedEvent(id, imageName));
     }
 
     @Override
