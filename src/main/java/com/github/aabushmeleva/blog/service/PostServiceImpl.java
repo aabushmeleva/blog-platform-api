@@ -1,6 +1,7 @@
 package com.github.aabushmeleva.blog.service;
 
 import com.github.aabushmeleva.blog.dao.PostDao;
+import com.github.aabushmeleva.blog.dao.TagDao;
 import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
@@ -8,6 +9,7 @@ import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.exception.NotFoundException;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
+import com.github.aabushmeleva.blog.service.tag.TagNormalizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,17 +22,21 @@ public class PostServiceImpl implements PostService {
 
     private final PostDao postDao;
     private final PostMapper postMapper;
+    private final TagDao tagDao;
 
-    public PostServiceImpl(PostDao postDao, PostMapper postMapper) {
+    public PostServiceImpl(PostDao postDao, PostMapper postMapper, TagDao tagDao) {
         this.postDao = postDao;
         this.postMapper = postMapper;
+        this.tagDao = tagDao;
     }
 
     @Override
+    @Transactional
     public PostResponse create(PostCreateRequest request) {
         Post saved = postDao.save(postMapper.toNewPost(request));
-        // TODO: save & return tags
-        return postMapper.toResponse(saved, List.of(), NEW_POST_COMMENTS_COUNT);
+        List<String> tags = TagNormalizer.normalize(request.tags());
+        tagDao.replaceTags(saved.id(), tags);
+        return postMapper.toResponse(saved, tags, NEW_POST_COMMENTS_COUNT);
     }
 
     @Override
@@ -38,8 +44,8 @@ public class PostServiceImpl implements PostService {
     public PostResponse findById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> postNotFound(id));
-        // TODO: load tags and comments count
-        return postMapper.toResponse(post, List.of(), 0);
+        // TODO: load comments count
+        return postMapper.toResponse(post, findTags(id), 0);
     }
 
     @Override
@@ -57,8 +63,10 @@ public class PostServiceImpl implements PostService {
         if (!postDao.update(updated)) {
             throw postNotFound(id);
         }
-        // TODO: return tags and comments count
-        return postMapper.toResponse(updated, List.of(), 0);
+        // TODO: return comments count
+        List<String> tags = TagNormalizer.normalize(request.tags());
+        tagDao.replaceTags(id, tags);
+        return postMapper.toResponse(updated, tags, 0);
     }
 
     @Override
@@ -72,6 +80,10 @@ public class PostServiceImpl implements PostService {
     @Override
     public long incrementLikes(long id) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    private List<String> findTags(long postId) {
+        return tagDao.findByPostIds(List.of(postId)).getOrDefault(postId, List.of());
     }
 
     private static NotFoundException postNotFound(long id) {
