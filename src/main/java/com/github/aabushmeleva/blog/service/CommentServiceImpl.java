@@ -5,7 +5,7 @@ import com.github.aabushmeleva.blog.dao.PostDao;
 import com.github.aabushmeleva.blog.dto.CommentCreateRequest;
 import com.github.aabushmeleva.blog.dto.CommentResponse;
 import com.github.aabushmeleva.blog.dto.CommentUpdateRequest;
-import com.github.aabushmeleva.blog.exception.NotFoundException;
+import com.github.aabushmeleva.blog.exception.CommentNotFoundException;
 import com.github.aabushmeleva.blog.model.Comment;
 import com.github.aabushmeleva.blog.service.mapper.CommentMapper;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
 
     private void requirePostExists(long postId) {
         if (!postDao.existsById(postId)) {
-            throw new NotFoundException("Post not found: " + postId);
+            throw new CommentNotFoundException(postId);
         }
     }
 }

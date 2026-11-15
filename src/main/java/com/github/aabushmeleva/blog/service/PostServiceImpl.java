@@ -6,7 +6,7 @@ import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
-import com.github.aabushmeleva.blog.exception.NotFoundException;
+import com.github.aabushmeleva.blog.exception.PostNotFoundException;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
 import com.github.aabushmeleva.blog.service.tag.TagNormalizer;
@@ -43,7 +43,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public PostResponse findById(long id) {
         Post post = postDao.findById(id)
-                .orElseThrow(() -> postNotFound(id));
+                .orElseThrow(() -> new PostNotFoundException(id));
         // TODO: load comments count
         return postMapper.toResponse(post, findTags(id), 0);
     }
@@ -57,11 +57,11 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostResponse update(long id, PostUpdateRequest request) {
         Post updated = postDao.findById(id)
-                .orElseThrow(() -> postNotFound(id))
+                .orElseThrow(() -> new PostNotFoundException(id))
                 .withContent(request.title(), request.text());
 
         if (!postDao.update(updated)) {
-            throw postNotFound(id);
+            throw new PostNotFoundException(id);
         }
         // TODO: return comments count
         List<String> tags = TagNormalizer.normalize(request.tags());
@@ -73,21 +73,18 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void delete(long id) {
         if (!postDao.deleteById(id)) {
-            throw postNotFound(id);
+            throw new PostNotFoundException(id);
         }
     }
 
     @Override
     @Transactional
     public long incrementLikes(long id) {
-        return postDao.incrementLikes(id).orElseThrow(() -> postNotFound(id));
+        return postDao.incrementLikes(id)
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     private List<String> findTags(long postId) {
         return tagDao.findByPostIds(List.of(postId)).getOrDefault(postId, List.of());
-    }
-
-    private static NotFoundException postNotFound(long id) {
-        return new NotFoundException("Post with id " + id + " not found");
     }
 }
