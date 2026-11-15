@@ -64,17 +64,27 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Utility libraries: Lombok and SLF4J logging -->
+        <!-- Lombok: compile-time code generation, not packaged into WAR -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- SLF4J API: logging facade used in code (Lombok @Slf4j) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- SLF4J implementation: needed only at runtime -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Testing dependencies: Spring Test, JUnit 5, Mockito, Jsonpath, Hamcrest -->
