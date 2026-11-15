@@ -12,6 +12,7 @@ import com.github.aabushmeleva.blog.model.PostSearchQuery;
 import com.github.aabushmeleva.blog.service.event.PostDeletedEvent;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import com.github.aabushmeleva.blog.model.Post;
+import com.github.aabushmeleva.blog.service.search.PostSearchQueryParser;
 import com.github.aabushmeleva.blog.service.tag.TagNormalizer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public PostPageResponse findPage(String search, int pageNumber, int pageSize) {
-        PostSearchQuery query = new PostSearchQuery("", Set.of());
+        PostSearchQuery query = PostSearchQueryParser.parse(search);
         long total = postDao.count(query);
         int lastPage = (int) Math.max(1, (total + pageSize - 1) / pageSize);
         long offset = (long) (pageNumber - 1) * pageSize;

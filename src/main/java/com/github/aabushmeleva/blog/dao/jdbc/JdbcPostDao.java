@@ -11,7 +11,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,6 +73,7 @@ public class JdbcPostDao implements PostDao {
     private static final String FIND_ALL_SQL = """
             SELECT id, title, text, likes_count, image_name
             FROM post
+            %s
             ORDER BY id DESC
             LIMIT :limit OFFSET :offset
             """;
@@ -78,7 +81,17 @@ public class JdbcPostDao implements PostDao {
     private static final String COUNT_SQL = """
             SELECT COUNT(*)
             FROM post
+            %s
             """;
+
+    private static final String TAGS_CONDITION = """
+            id IN (SELECT post_id
+                   FROM post_tag
+                   WHERE name IN (:tags)
+                   GROUP BY post_id
+                   HAVING COUNT(*) = :tagCount)""";
+
+    private static final String TITLE_CONDITION = "LOWER(title) LIKE :titlePattern ESCAPE '\\'";
 
     private static final String[] ID_COLUMN = {"id"};
 
@@ -124,12 +137,15 @@ public class JdbcPostDao implements PostDao {
         var params = new MapSqlParameterSource()
                 .addValue("limit", limit)
                 .addValue("offset", offset);
-        return jdbcTemplate.query(FIND_ALL_SQL, params, PostRowMapper.INSTANCE);
+        String sql = FIND_ALL_SQL.formatted(whereClause(query, params));
+        return jdbcTemplate.query(sql, params, PostRowMapper.INSTANCE);
     }
 
     @Override
     public long count(PostSearchQuery query) {
-        Long count = jdbcTemplate.queryForObject(COUNT_SQL, Map.of(), Long.class);
+        var params = new MapSqlParameterSource();
+        String sql = COUNT_SQL.formatted(whereClause(query, params));
+        Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count == null ? 0 : count;
     }
 
@@ -171,5 +187,26 @@ public class JdbcPostDao implements PostDao {
                 .stream()
                 .filter(Objects::nonNull)
                 .findFirst();
+    }
+
+    private static String whereClause(PostSearchQuery query, MapSqlParameterSource params) {
+        List<String> conditions = new ArrayList<>();
+        if (query.hasTitle()) {
+            conditions.add(TITLE_CONDITION);
+            params.addValue("titlePattern",
+                    "%" + escapeLike(query.titleSubstring().toLowerCase(Locale.ROOT)) + "%");
+        }
+        if (query.hasTags()) {
+            conditions.add(TAGS_CONDITION);
+            params.addValue("tags", query.tags());
+            params.addValue("tagCount", query.tags().size());
+        }
+        return conditions.isEmpty() ? "" : "WHERE " + String.join(" AND ", conditions);
+    }
+
+    private static String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 }
