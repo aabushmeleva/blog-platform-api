@@ -2,6 +2,7 @@ package com.github.aabushmeleva.blog.controller.advice;
 
 import com.github.aabushmeleva.blog.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -51,5 +52,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         body.setDetail("Request validation failed");
         body.setProperty("errors", errors);
         return handleExceptionInternal(ex, body, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex,
+                                                        HttpHeaders headers,
+                                                        HttpStatusCode status,
+                                                        WebRequest request) {
+        return ResponseEntity.status(status).headers(headers).build();
     }
 }
