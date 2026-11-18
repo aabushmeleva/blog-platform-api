@@ -4,6 +4,7 @@ import com.github.aabushmeleva.blog.dto.CommentCreateRequest;
 import com.github.aabushmeleva.blog.dto.CommentResponse;
 import com.github.aabushmeleva.blog.dto.CommentUpdateRequest;
 import com.github.aabushmeleva.blog.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +29,7 @@ public class CommentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse create(@PathVariable long postId,
-                                  @RequestBody CommentCreateRequest request) {
+                                  @Valid @RequestBody CommentCreateRequest request) {
         return commentService.create(postId, request);
     }
 
@@ -44,7 +45,7 @@ public class CommentController {
 
     @PutMapping("/{commentId}")
     public CommentResponse update(@PathVariable long commentId,
-                                  @RequestBody CommentUpdateRequest request) {
+                                  @Valid @RequestBody CommentUpdateRequest request) {
         return commentService.update(commentId, request);
     }
 

@@ -5,6 +5,9 @@ import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.service.PostService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +32,7 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PostResponse create(@RequestBody PostCreateRequest request) {
+    public PostResponse create(@Valid @RequestBody PostCreateRequest request) {
         return postService.create(request);
     }
 
@@ -44,7 +47,8 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public PostResponse update(@PathVariable long id, @RequestBody PostUpdateRequest request) {
+    public PostResponse update(@PathVariable long id,
+                               @Valid @RequestBody PostUpdateRequest request) {
         return postService.update(id, request);
     }
 
@@ -55,8 +59,8 @@ public class PostController {
 
     @GetMapping
     public PostPageResponse findPage(@RequestParam String search,
-                                     @RequestParam int pageNumber,
-                                     @RequestParam int pageSize) {
+                                     @RequestParam @Min(1) int pageNumber,
+                                     @RequestParam @Min(1) @Max(100) int pageSize) {
         return postService.findPage(search, pageNumber, pageSize);
     }
 }
