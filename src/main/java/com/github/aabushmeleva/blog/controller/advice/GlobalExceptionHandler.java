@@ -54,6 +54,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, body, headers, status, request);
     }
 
+    /**
+     * Returns 400 with an empty body. The bundled frontend requests
+     * {@code /api/posts/undefined/comments} before the post is loaded and crashes
+     * when the error body is valid JSON. Remove once the frontend is fixed.
+     */
     @Override
     protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex,
                                                         HttpHeaders headers,

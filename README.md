@@ -263,3 +263,27 @@ curl -X POST localhost:8080/api/posts/1/likes
 curl -X POST localhost:8080/api/posts/1/comments -H 'Content-Type: application/json' \
   -d '{"text":"Nice post","postId":1}'
 ```
+
+### Known important frontend issues
+
+The bundled frontend is used as is. These issues are on the frontend side;
+the backend either tolerates them or they need a workaround.
+
+- **Comments requested with `postId=undefined`.** The post page requests
+  `/api/posts/undefined/comments` before the post is loaded and crashes if the
+  error body is valid JSON. The backend returns 400 with an empty body for
+  type mismatch errors, so the page renders; an "Unexpected end of JSON input"
+  alert may appear.
+- **Comment update URL.** `PUT` is sent to
+  `/api/posts/{commentId}/comments/{commentId}`; the correct `postId` is only
+  in the request body.
+- **Saving a post without a new image.** The browser console shows
+  `Failed to execute 'append' on 'FormData'`. The post itself is saved;
+  the image request is not sent.
+- **Reloading a post page returns 404.** The bundled `nginx.conf` is shadowed
+  by the default `default.conf` of the nginx image, so `/posts/{id}` is not
+  routed to `index.html`. Open posts from the feed instead of reloading.
+- **Validation errors are not displayed.** The frontend does not handle
+    error responses, so a request rejected with 400 (for example, a post with
+    a blank title) is not reported in the UI. The validation result can be seen
+    in the browser network tab or by calling the API directly (see API usage).
