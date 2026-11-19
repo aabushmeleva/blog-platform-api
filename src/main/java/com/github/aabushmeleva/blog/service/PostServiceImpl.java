@@ -7,6 +7,7 @@ import com.github.aabushmeleva.blog.dto.PostCreateRequest;
 import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
+import com.github.aabushmeleva.blog.exception.InvalidTagException;
 import com.github.aabushmeleva.blog.exception.PostNotFoundException;
 import com.github.aabushmeleva.blog.model.PostSearchQuery;
 import com.github.aabushmeleva.blog.service.event.PostDeletedEvent;
@@ -18,14 +19,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 public class PostServiceImpl implements PostService {
 
     private static final long NEW_POST_COMMENTS_COUNT = 0;
+    private static final int MAX_TAG_LENGTH = 64;
 
     private final PostDao postDao;
     private final PostMapper postMapper;
@@ -45,7 +47,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostResponse create(PostCreateRequest request) {
         Post saved = postDao.save(postMapper.toNewPost(request));
-        List<String> tags = TagNormalizer.normalize(request.tags());
+        List<String> tags = normalizeTags(request.tags());
         tagDao.replaceTags(saved.id(), tags);
         return postMapper.toResponse(saved, tags, NEW_POST_COMMENTS_COUNT);
     }
@@ -88,7 +90,7 @@ public class PostServiceImpl implements PostService {
         if (!postDao.update(updated)) {
             throw new PostNotFoundException(id);
         }
-        List<String> tags = TagNormalizer.normalize(request.tags());
+        List<String> tags = normalizeTags(request.tags());
         tagDao.replaceTags(id, tags);
         return postMapper.toResponse(updated, tags, countComments(id));
     }
@@ -116,5 +118,15 @@ public class PostServiceImpl implements PostService {
 
     private long countComments(long postId) {
         return commentDao.countByPostIds(List.of(postId)).getOrDefault(postId, 0L);
+    }
+
+    private List<String> normalizeTags(Collection<String> tags) {
+        List<String> normalized = TagNormalizer.normalize(tags);
+        boolean tooLong = normalized.stream()
+                .anyMatch(tag -> tag.codePointCount(0, tag.length()) > MAX_TAG_LENGTH);
+        if (tooLong) {
+            throw new InvalidTagException(MAX_TAG_LENGTH);
+        }
+        return normalized;
     }
 }

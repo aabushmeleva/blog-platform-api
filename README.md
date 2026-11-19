@@ -2,6 +2,8 @@
 RESTful backend service for a blog platform built with Java, Spring Framework (Web MVC, JDBC), H2, and Apache Tomcat.
 Packaged as a WAR and used by a ready-made React frontend.
 
+[Build and run instructions](#build-and-deployment)
+
 ## Features
 
 - Posts: create, read, update, delete, paged feed
