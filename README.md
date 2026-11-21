@@ -12,6 +12,19 @@ Packaged as a WAR and used by a ready-made React frontend.
 - Post images
 - Comments: create, read, update, delete
 
+## Tech stack
+
+- Java 21
+- Spring Framework 6.2: Web MVC, dependency injection and transaction management
+- Spring JDBC: SQL access through `NamedParameterJdbcTemplate`
+- H2: file-based database for the application, in-memory database for integration tests
+- Jakarta Bean Validation with Hibernate Validator
+- Maven, WAR packaging, external Apache Tomcat
+- JUnit 5, Mockito, Spring Test and MockMvc
+
+The application uses plain Spring Framework without Spring Boot.
+The application context is configured with Java configuration classes and initialized through `web.xml`.
+
 ## API
 
 Base URL: `http://localhost:8080`
@@ -35,8 +48,8 @@ Base URL: `http://localhost:8080`
 | GET | `/api/posts/{id}/image` | Get post image bytes |
 
 - Max size: 5 MB per file, 10 MB per request (`<multipart-config>` in `web.xml`)
-- Recognized extensions: `jpg`, `jpeg`, `png`, `gif`, `webp`; other files are stored without an extension and served as `application/octet-stream`
-- `GET` sets `Content-Type` from the file extension
+- Allowed extensions: `jpg`, `jpeg`, `png`, `gif`, `webp`
+- Empty files and unsupported extensions are rejected with `400 Bad Request`- `GET` sets `Content-Type` from the file extension
 - `404` if the post does not exist or has no image
 
 ### Comments — `CommentController`
@@ -56,6 +69,10 @@ Errors are returned as `application/problem+json` ([RFC 9457](https://www.rfc-ed
 ```json
 { "type": "about:blank", "title": "Not Found", "status": 404, "detail": "Post not found: 42", "instance": "/api/posts/42" }
 ```
+
+Exception: path and query parameter type mismatch errors return `400 Bad Request`
+with an empty body for compatibility with the bundled frontend.
+See [Known important frontend issues](#known-important-frontend-issues)
 
 ### Feed and search rules
 
@@ -265,6 +282,50 @@ curl -X POST localhost:8080/api/posts/1/likes
 curl -X POST localhost:8080/api/posts/1/comments -H 'Content-Type: application/json' \
   -d '{"text":"Nice post","postId":1}'
 ```
+
+## Tests
+
+Run all tests from the project root:
+
+```bash
+mvn clean test
+```
+
+Run only integration tests:
+
+```bash
+mvn -Dtest=PostDaoIntegrationTest,PostMvcIntegrationTest test
+```
+
+### Unit tests
+
+JUnit 5 and Mockito tests cover:
+
+- Search query parsing
+- Post creation, retrieval, update, deletion, likes and pagination
+- Tag normalization and rejection of tags longer than 64 characters
+- Comment creation, retrieval, update and deletion, including key error cases
+- Empty image rejection and successful image replacement
+
+Service unit tests use mocked DAOs and real DTO mappers without starting a Spring application context.
+
+### Integration tests
+
+Integration tests use Spring TestContext, real application components and an in-memory H2 database:
+
+- DAO: combined title and tag filtering, LIMIT/OFFSET and cascade deletion
+- MVC: post page JSON, missing post responses and path/body ID mismatch
+
+DAO and MVC tests inherit the same context configuration from `AbstractIntegrationTest`, allowing Spring to reuse the cached application context.
+Each test runs in a transaction that is rolled back afterward.
+
+Test properties override the application database connection.
+Integration tests do not use the file-based application database or require `BLOG_DB_PASSWORD`.
+
+Maven Surefire loads Mockito as a Java agent.
+When tests are run directly with the IDE's JUnit runner, additional agent configuration may be needed.
+
+Test reports are generated in `target/surefire-reports`.
 
 ### Known important frontend issues
 
