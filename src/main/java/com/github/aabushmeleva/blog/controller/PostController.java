@@ -49,6 +49,7 @@ public class PostController {
     @PutMapping("/{id}")
     public PostResponse update(@PathVariable long id,
                                @Valid @RequestBody PostUpdateRequest request) {
+        RequestIds.requireMatch("id", id, request.id());
         return postService.update(id, request);
     }
 

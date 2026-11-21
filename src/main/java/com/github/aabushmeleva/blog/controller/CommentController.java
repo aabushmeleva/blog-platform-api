@@ -30,6 +30,7 @@ public class CommentController {
     @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse create(@PathVariable long postId,
                                   @Valid @RequestBody CommentCreateRequest request) {
+        RequestIds.requireMatch("postId", postId, request.postId());
         return commentService.create(postId, request);
     }
 
@@ -46,6 +47,8 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public CommentResponse update(@PathVariable long commentId,
                                   @Valid @RequestBody CommentUpdateRequest request) {
+        // By commentId only due the front bug
+        RequestIds.requireMatch("id", commentId, request.id());
         return commentService.update(commentId, request);
     }
 
