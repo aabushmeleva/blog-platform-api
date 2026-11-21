@@ -9,6 +9,6 @@ public record PostPageResponse(
         int lastPage
 ) {
     public PostPageResponse {
-        posts = posts == null ? List.of() : List.copyOf(posts);
+        List.copyOf(posts);
     }
 }

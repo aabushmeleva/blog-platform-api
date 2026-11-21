@@ -11,6 +11,6 @@ public record PostResponse(
         long commentsCount
 ) {
     public PostResponse {
-        tags = tags == null ? List.of() : List.copyOf(tags);
+        List.copyOf(tags);
     }
 }

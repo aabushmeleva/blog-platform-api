@@ -1,6 +1,7 @@
 package com.github.aabushmeleva.blog.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -10,9 +11,6 @@ public record PostCreateRequest(
         String title,
         @NotBlank
         String text,
-        List<String> tags
-) {
-    public PostCreateRequest {
-        tags = tags == null ? List.of() : List.copyOf(tags);
-    }
-}
+        @NotNull
+        List<@NotNull String> tags
+) { }
