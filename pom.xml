@@ -27,6 +27,9 @@
         <json-path.version>2.9.0</json-path.version>
         <hamcrest.version>3.0</hamcrest.version>
         <hibernate-validator.version>8.0.6.Final</hibernate-validator.version>
+
+        <!-- Plugin versions -->
+        <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
     </properties>
 
     <dependencies>
@@ -168,6 +171,24 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.1</version>
+                <configuration>
+                    <argLine>-javaagent:"${org.mockito:mockito-core:jar}"</argLine>
+                </configuration>
+            </plugin>
+
+            <!-- Resolve dependency JAR paths for the Mockito Java agent configuration -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>resolve-dependency-paths</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
