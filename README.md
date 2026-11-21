@@ -49,7 +49,8 @@ Base URL: `http://localhost:8080`
 
 - Max size: 5 MB per file, 10 MB per request (`<multipart-config>` in `web.xml`)
 - Allowed extensions: `jpg`, `jpeg`, `png`, `gif`, `webp`
-- Empty files and unsupported extensions are rejected with `400 Bad Request`- `GET` sets `Content-Type` from the file extension
+- Empty files and unsupported extensions are rejected with `400 Bad Request`
+- `GET` sets `Content-Type` from the file extension
 - `404` if the post does not exist or has no image
 
 ### Comments — `CommentController`
@@ -161,10 +162,12 @@ erDiagram
 
 ### Database password
 
-The password is read from the `BLOG_DB_PASSWORD` environment variable,
-which must be visible to the Tomcat process. Create `bin/setenv.sh`
-in the Tomcat installation (Tomcat runs it on startup):
+The password is read from the `BLOG_DB_PASSWORD` environment variable, which must be visible to the Tomcat process.
+Create `bin/setenv.sh` in the Tomcat installation (Tomcat runs it on startup):
 
+Replace `your_password` with your database password.
+The command below creates or overwrites `setenv.sh`.
+If the file already exists, edit it and add or update the export instead of overwriting it.
 ```bash
 echo 'export BLOG_DB_PASSWORD=your_password' > "$(brew --prefix tomcat)/libexec/bin/setenv.sh"
 chmod +x "$(brew --prefix tomcat)/libexec/bin/setenv.sh"
@@ -197,7 +200,8 @@ The resulting archive is `target/ROOT.war`.
 
 ### Deploy (macOS / Homebrew)
 
-First deployment: set BLOG_DB_PASSWORD (see Database password)
+First deployment: set BLOG_DB_PASSWORD
+See  [Database password](#database-password)
 
 Stop Tomcat:
 
@@ -227,8 +231,8 @@ brew services start tomcat
 ### Frontend
 
 The React frontend is provided as a separate archive with the assignment
-(`dist`, `nginx.conf`, `Dockerfile`, `docker-compose.yaml`). It is served by Nginx on port 80
-and calls the backend at `http://localhost:8080` directly from the browser
+(`dist`, `nginx.conf`, `Dockerfile`, `docker-compose.yaml`).
+It is served by Nginx on port 80 and calls the backend at `http://localhost:8080` directly from the browser
 (CORS is enabled for `http://localhost`).
 
 1. Start Docker Desktop.
@@ -256,31 +260,6 @@ docker compose down
 ```bash
 tail -n 100 "$(brew --prefix tomcat)/libexec/logs/catalina.$(date +%F).log"
 tail -n 100 "$(brew --prefix tomcat)/libexec/logs/localhost.$(date +%F).log"
-```
-
-## Usage
-
-Use the frontend at `http://localhost`, or call the API directly:
-
-```bash
-# create a post
-curl -X POST localhost:8080/api/posts -H 'Content-Type: application/json' \
-  -d '{"title":"Hello","text":"First post","tags":["java","spring"]}'
-
-# upload an image
-curl -X PUT localhost:8080/api/posts/1/image -F 'image=@cat.png'
-
-# feed: page 1, 5 posts per page, search by title and tag
-# (# must be URL-encoded, so --data-urlencode is used)
-curl --get localhost:8080/api/posts --data-urlencode 'search=hello #java' \
-  -d pageNumber=1 -d pageSize=5
-
-# like a post
-curl -X POST localhost:8080/api/posts/1/likes
-
-# add a comment
-curl -X POST localhost:8080/api/posts/1/comments -H 'Content-Type: application/json' \
-  -d '{"text":"Nice post","postId":1}'
 ```
 
 ## Tests
@@ -327,6 +306,31 @@ When tests are run directly with the IDE's JUnit runner, additional agent config
 
 Test reports are generated in `target/surefire-reports`.
 
+## Usage
+
+Use the frontend at `http://localhost`, or call the API directly:
+
+```bash
+# create a post
+curl -X POST localhost:8080/api/posts -H 'Content-Type: application/json' \
+  -d '{"title":"Hello","text":"First post","tags":["java","spring"]}'
+
+# upload an image
+curl -X PUT localhost:8080/api/posts/1/image -F 'image=@cat.png'
+
+# feed: page 1, 5 posts per page, search by title and tag
+# (# must be URL-encoded, so --data-urlencode is used)
+curl --get localhost:8080/api/posts --data-urlencode 'search=hello #java' \
+  -d pageNumber=1 -d pageSize=5
+
+# like a post
+curl -X POST localhost:8080/api/posts/1/likes
+
+# add a comment
+curl -X POST localhost:8080/api/posts/1/comments -H 'Content-Type: application/json' \
+  -d '{"text":"Nice post","postId":1}'
+```
+
 ### Known important frontend issues
 
 The bundled frontend is used as is. These issues are on the frontend side;
@@ -349,4 +353,4 @@ the backend either tolerates them or they need a workaround.
 - **Validation errors are not displayed.** The frontend does not handle
     error responses, so a request rejected with 400 (for example, a post with
     a blank title) is not reported in the UI. The validation result can be seen
-    in the browser network tab or by calling the API directly (see API usage).
+    in the browser network tab or by calling the API directly (see [API usage](#usage)).
