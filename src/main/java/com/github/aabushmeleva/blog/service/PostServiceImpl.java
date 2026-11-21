@@ -46,8 +46,8 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostResponse create(PostCreateRequest request) {
+        List<String> tags = normalizeAndValidateTags(request.tags());
         Post saved = postDao.save(postMapper.toNewPost(request));
-        List<String> tags = normalizeTags(request.tags());
         tagDao.replaceTags(saved.id(), tags);
         return postMapper.toResponse(saved, tags, NEW_POST_COMMENTS_COUNT);
     }
@@ -90,7 +90,7 @@ public class PostServiceImpl implements PostService {
         if (!postDao.update(updated)) {
             throw new PostNotFoundException(id);
         }
-        List<String> tags = normalizeTags(request.tags());
+        List<String> tags = normalizeAndValidateTags(request.tags());
         tagDao.replaceTags(id, tags);
         return postMapper.toResponse(updated, tags, countComments(id));
     }
@@ -120,7 +120,7 @@ public class PostServiceImpl implements PostService {
         return commentDao.countByPostIds(List.of(postId)).getOrDefault(postId, 0L);
     }
 
-    private List<String> normalizeTags(Collection<String> tags) {
+    private List<String> normalizeAndValidateTags(Collection<String> tags) {
         List<String> normalized = TagNormalizer.normalize(tags);
         boolean tooLong = normalized.stream()
                 .anyMatch(tag -> tag.codePointCount(0, tag.length()) > MAX_TAG_LENGTH);
