@@ -87,11 +87,13 @@ public class PostServiceImpl implements PostService {
         Post updated = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id))
                 .withContent(request.title(), request.text());
+        List<String> tags = normalizeAndValidateTags(request.tags());
+
         if (!postDao.update(updated)) {
             throw new PostNotFoundException(id);
         }
-        List<String> tags = normalizeAndValidateTags(request.tags());
         tagDao.replaceTags(id, tags);
+
         return postMapper.toResponse(updated, tags, countComments(id));
     }
 
