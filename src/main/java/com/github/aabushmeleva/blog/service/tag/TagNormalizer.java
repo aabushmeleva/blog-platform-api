@@ -19,6 +19,7 @@ public final class TagNormalizer {
         return tags.stream()
                 .map(String::strip)
                 .map(tag -> tag.replaceFirst(LEADING_HASHES, ""))
+                .map(String::strip)
                 .filter(tag -> !tag.isEmpty())
                 .map(tag -> tag.toLowerCase(Locale.ROOT))
                 .distinct()
