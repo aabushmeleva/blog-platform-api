@@ -30,6 +30,9 @@ public class PostImageServiceImpl implements PostImageService {
         if (image.isEmpty()) {
             throw new EmptyImageException();
         }
+        if (ImageExtensions.of(image.getOriginalFilename()).isEmpty()) {
+            throw new UnsupportedImageTypeException(ImageExtensions.ALLOWED);
+        }
         Optional<String> oldImageName = postDao.findImageName(postId);
         String newImageName = saveFile(image);
         if (!postDao.updateImageName(postId, newImageName)) {
