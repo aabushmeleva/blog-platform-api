@@ -4,11 +4,13 @@ import com.github.aabushmeleva.blog.dao.CommentDao;
 import com.github.aabushmeleva.blog.dao.PostDao;
 import com.github.aabushmeleva.blog.dao.TagDao;
 import com.github.aabushmeleva.blog.dto.PostCreateRequest;
+import com.github.aabushmeleva.blog.dto.PostPageResponse;
 import com.github.aabushmeleva.blog.dto.PostResponse;
 import com.github.aabushmeleva.blog.dto.PostUpdateRequest;
 import com.github.aabushmeleva.blog.exception.InvalidTagException;
 import com.github.aabushmeleva.blog.exception.PostNotFoundException;
 import com.github.aabushmeleva.blog.model.Post;
+import com.github.aabushmeleva.blog.model.PostSearchQuery;
 import com.github.aabushmeleva.blog.service.event.PostDeletedEvent;
 import com.github.aabushmeleva.blog.service.mapper.PostMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +30,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -41,12 +46,16 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceImplTest {
+
     @Mock
     private PostDao postDao;
+
     @Mock
     private TagDao tagDao;
+
     @Mock
     private CommentDao commentDao;
+
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
@@ -127,6 +136,7 @@ class PostServiceImplTest {
 
     @Nested
     class FindByIdTests {
+
         @ParameterizedTest
         @MethodSource("com.github.aabushmeleva.blog.service.PostServiceImplTest#postDetailsCases")
         void shouldReturnPostWithTagsAndCommentsCount(
@@ -176,6 +186,7 @@ class PostServiceImplTest {
 
     @Nested
     class UpdateTests {
+
         @ParameterizedTest
         @MethodSource("com.github.aabushmeleva.blog.service.PostServiceImplTest#validTagCases")
         void shouldUpdatePostWithNormalizedTags(
@@ -276,6 +287,7 @@ class PostServiceImplTest {
 
     @Nested
     class DeleteTests {
+
         @ParameterizedTest
         @NullAndEmptySource
         @ValueSource(strings = "existing-image.png")
@@ -306,6 +318,86 @@ class PostServiceImplTest {
             verify(postDao).findImageName(POST_ID);
             verify(postDao).deleteById(POST_ID);
             verifyNoInteractions(eventPublisher);
+        }
+    }
+
+    @Nested
+    class IncrementLikesTests {
+
+        @ParameterizedTest
+        @ValueSource(longs = {1L, 8L, 100L})
+        void shouldReturnUpdatedLikesCount(long updatedLikesCount) {
+            when(postDao.incrementLikes(POST_ID))
+                    .thenReturn(OptionalLong.of(updatedLikesCount));
+
+            long actual = postService.incrementLikes(POST_ID);
+
+            assertEquals(updatedLikesCount, actual);
+            verify(postDao).incrementLikes(POST_ID);
+            verifyNoInteractions(tagDao, commentDao, eventPublisher);
+        }
+
+        @Test
+        void shouldThrowPostNotFoundExceptionWhenLikingMissingPost() {
+            when(postDao.incrementLikes(POST_ID))
+                    .thenReturn(OptionalLong.empty());
+
+            assertThrows(
+                    PostNotFoundException.class,
+                    () -> postService.incrementLikes(POST_ID)
+            );
+
+            verify(postDao).incrementLikes(POST_ID);
+            verifyNoInteractions(tagDao, commentDao, eventPublisher);
+        }
+    }
+
+    @Nested
+    class FindPageTests {
+
+        @Test
+        void shouldReturnPostPageWithTagsAndCommentsCounts() {
+            PostSearchQuery query = new PostSearchQuery("Horseshoe", Set.of("bioethics"));
+            Post first = existingPost();
+            Post second = new Post(POST_ID - 1, "Another post", "Another text", 2L, null);
+            List<Long> ids = List.of(first.id(), second.id());
+
+            when(postDao.count(query)).thenReturn(2L);
+            when(postDao.findAll(query, 5, 0L)).thenReturn(List.of(first, second));
+            when(tagDao.findByPostIds(ids)).thenReturn(Map.of(first.id(), List.of("bioethics")));
+            when(commentDao.countByPostIds(ids)).thenReturn(Map.of(first.id(), 3L));
+
+            PostPageResponse actual = postService.findPage("Horseshoe #Bioethics", 1, 5);
+
+            PostPageResponse expected = new PostPageResponse(
+                    List.of(
+                            new PostResponse(first.id(), first.title(), first.text(),
+                                    List.of("bioethics"), first.likesCount(), 3L),
+                            new PostResponse(second.id(), second.title(), second.text(),
+                                    List.of(), second.likesCount(), 0L)
+                    ),
+                    false, false, 1
+            );
+            assertEquals(expected, actual);
+            verify(tagDao).findByPostIds(ids);
+            verify(commentDao).countByPostIds(ids);
+        }
+
+        @Test
+        void shouldCalculatePaginationForMiddlePage() {
+            PostSearchQuery query = new PostSearchQuery("", Set.of());
+            List<Long> ids = List.of(POST_ID);
+
+            when(postDao.count(query)).thenReturn(15L);
+            when(postDao.findAll(query, 5, 5L)).thenReturn(List.of(existingPost()));
+            when(tagDao.findByPostIds(ids)).thenReturn(Map.of());
+            when(commentDao.countByPostIds(ids)).thenReturn(Map.of());
+
+            PostPageResponse actual = postService.findPage("", 2, 5);
+
+            assertTrue(actual.hasPrev());
+            assertTrue(actual.hasNext());
+            assertEquals(3, actual.lastPage());
         }
     }
 
