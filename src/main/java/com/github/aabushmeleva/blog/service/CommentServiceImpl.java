@@ -53,8 +53,11 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse update(long commentId, CommentUpdateRequest request) {
         Comment existing = commentDao.findById(commentId)
+                .filter(comment -> comment.postId().equals(request.postId()))
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
+
         Comment updated = existing.withText(request.text());
+
         if (!commentDao.update(updated)) {
             throw new CommentNotFoundException(commentId);
         }
