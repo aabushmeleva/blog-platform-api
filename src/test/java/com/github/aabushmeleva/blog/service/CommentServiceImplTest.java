@@ -104,7 +104,6 @@ public class CommentServiceImplTest {
             verify(commentDao, never()).update(any(Comment.class));
         }
 
-
         @Test
         void shouldThrowCommentNotFoundExceptionWhenUpdateReturnsFalse() {
             Comment existing = new Comment(COMMENT_ID, POST_ID, COMMENT_TEXT);
@@ -116,6 +115,20 @@ public class CommentServiceImplTest {
 
             assertThrows(CommentNotFoundException.class, () -> commentService.update(COMMENT_ID, request));
             verify(commentDao).update(updated);
+        }
+
+        @Test
+        void shouldThrowCommentNotFoundExceptionWhenCommentBelongsToAnotherPost() {
+            Comment existing = new Comment(COMMENT_ID, POST_ID, COMMENT_TEXT);
+            CommentUpdateRequest request = new CommentUpdateRequest(COMMENT_ID, UPDATED_TEXT,  POST_ID + 1);
+
+            when(commentDao.findById(COMMENT_ID)).thenReturn(Optional.of(existing));
+
+            assertThrows(
+                    CommentNotFoundException.class,
+                    () -> commentService.update(COMMENT_ID, request)
+            );
+            verify(commentDao, never()).update(any(Comment.class));
         }
     }
 
