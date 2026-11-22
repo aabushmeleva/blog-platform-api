@@ -1,0 +1,212 @@
+package com.github.aabushmeleva.blog.dao.jdbc;
+
+import com.github.aabushmeleva.blog.dao.PostDao;
+import com.github.aabushmeleva.blog.dao.rowmapper.PostRowMapper;
+import com.github.aabushmeleva.blog.model.Post;
+import com.github.aabushmeleva.blog.model.PostSearchQuery;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalLong;
+
+@Repository
+public class JdbcPostDao implements PostDao {
+
+    private static final String INSERT_SQL = """
+            INSERT INTO post (title, text, likes_count, image_name)
+            VALUES (:title, :text, :likesCount, :imageName)
+            """;
+
+
+    private static final String SELECT_BY_ID_SQL = """
+            SELECT id, title, text, likes_count, image_name
+            FROM post
+            WHERE id = :id
+            """;
+
+    private static final String EXISTS_BY_ID_SQL = """
+            SELECT EXISTS (SELECT 1 FROM post WHERE id = :id)
+            """;
+
+    private static final String DELETE_BY_ID_SQL = "DELETE FROM post WHERE id = :id";
+
+    static final String UPDATE_SQL = """
+            UPDATE post
+            SET title = :title, text = :text
+            WHERE id = :id
+            """;
+
+    private static final String INCREMENT_LIKES_SQL = """
+            UPDATE post
+            SET likes_count = likes_count + 1
+            WHERE id = :id
+            """;
+
+    private static final String FIND_LIKES_COUNT_SQL = """
+            SELECT likes_count
+            FROM post
+            WHERE id = :id
+            """;
+
+    private static final String FIND_IMAGE_NAME_SQL = """
+            SELECT image_name
+            FROM post
+            WHERE id = :id
+            """;
+
+    private static final String UPDATE_IMAGE_NAME_SQL = """
+            UPDATE post
+            SET image_name = :imageName
+            WHERE id = :id
+            """;
+
+    private static final String FIND_ALL_SQL = """
+            SELECT id, title, text, likes_count, image_name
+            FROM post
+            %s
+            ORDER BY id DESC
+            LIMIT :limit OFFSET :offset
+            """;
+
+    private static final String COUNT_SQL = """
+            SELECT COUNT(*)
+            FROM post
+            %s
+            """;
+
+    private static final String TAGS_CONDITION = """
+            id IN (SELECT post_id
+                   FROM post_tag
+                   WHERE name IN (:tags)
+                   GROUP BY post_id
+                   HAVING COUNT(*) = :tagCount)""";
+
+    private static final String TITLE_CONDITION = "LOWER(title) LIKE :titlePattern ESCAPE '\\'";
+
+    private static final String[] ID_COLUMN = {"id"};
+
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+
+    public JdbcPostDao(NamedParameterJdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Override
+    public Post save(Post post) {
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("title", post.title())
+                .addValue("text", post.text())
+                .addValue("likesCount", post.likesCount())
+                .addValue("imageName", post.imageName());
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(INSERT_SQL, params, keyHolder, ID_COLUMN);
+
+        Long id = keyHolder.getKeyAs(Long.class);
+        if (id == null) {
+            throw new IllegalStateException("Database did not return generated id for post");
+        }
+        return new Post(id, post.title(), post.text(), post.likesCount(), post.imageName());
+    }
+
+    @Override
+    public Optional<Post> findById(long id) {
+        return jdbcTemplate.query(SELECT_BY_ID_SQL, new MapSqlParameterSource("id", id), PostRowMapper.INSTANCE)
+                .stream()
+                .findFirst();
+    }
+
+    @Override
+    public boolean existsById(long id) {
+        return Boolean.TRUE.equals(
+                jdbcTemplate.queryForObject(EXISTS_BY_ID_SQL, Map.of("id", id), Boolean.class));
+    }
+
+    @Override
+    public List<Post> findAll(PostSearchQuery query, int limit, long offset) {
+        var params = new MapSqlParameterSource()
+                .addValue("limit", limit)
+                .addValue("offset", offset);
+        String sql = FIND_ALL_SQL.formatted(whereClause(query, params));
+        return jdbcTemplate.query(sql, params, PostRowMapper.INSTANCE);
+    }
+
+    @Override
+    public long count(PostSearchQuery query) {
+        var params = new MapSqlParameterSource();
+        String sql = COUNT_SQL.formatted(whereClause(query, params));
+        Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
+        return count == null ? 0 : count;
+    }
+
+    @Override
+    public boolean update(Post post) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", post.id())
+                .addValue("title", post.title())
+                .addValue("text", post.text());
+        return jdbcTemplate.update(UPDATE_SQL, params) > 0;
+    }
+
+    @Override
+    public boolean deleteById(long id) {
+        int deletedRows = jdbcTemplate.update(DELETE_BY_ID_SQL, Map.of("id", id));
+        return deletedRows > 0;
+    }
+
+    @Override
+    public OptionalLong incrementLikes(long id) {
+        Map<String, Object> params = Map.of("id", id);
+        if (jdbcTemplate.update(INCREMENT_LIKES_SQL, params) == 0) {
+            return OptionalLong.empty();
+        }
+        return OptionalLong.of(jdbcTemplate.queryForObject(FIND_LIKES_COUNT_SQL, params, Long.class));
+    }
+
+    @Override
+    public boolean updateImageName(long id, String imageName) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("imageName", imageName);
+        return jdbcTemplate.update(UPDATE_IMAGE_NAME_SQL, params) > 0;
+    }
+
+    @Override
+    public Optional<String> findImageName(long id) {
+        return jdbcTemplate.queryForList(FIND_IMAGE_NAME_SQL, Map.of("id", id), String.class)
+                .stream()
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
+    private static String whereClause(PostSearchQuery query, MapSqlParameterSource params) {
+        List<String> conditions = new ArrayList<>();
+        if (query.hasTitle()) {
+            conditions.add(TITLE_CONDITION);
+            params.addValue("titlePattern",
+                    "%" + escapeLike(query.titleSubstring().toLowerCase(Locale.ROOT)) + "%");
+        }
+        if (query.hasTags()) {
+            conditions.add(TAGS_CONDITION);
+            params.addValue("tags", query.tags());
+            params.addValue("tagCount", query.tags().size());
+        }
+        return conditions.isEmpty() ? "" : "WHERE " + String.join(" AND ", conditions);
+    }
+
+    private static String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+    }
+}
